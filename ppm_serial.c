@@ -325,7 +325,7 @@ int main(int argc, char *argv[]){
     // loop over all frames, in chunks of stride_len
     begin = clock();
 
-    double calc_time = processImage(images, emboss, stride_len);
+    double calc_time = processImage(images, edge, stride_len);
 
     end = clock();
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;

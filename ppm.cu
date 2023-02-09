@@ -19,11 +19,11 @@
 #define OUTPUT_TILE_SIZE 12
 
 
-#define _FATAL(msg, ...) \
-    do {\
-        fprintf(stderr, "[%s:%d] "msg"\n", __FILE__, __LINE__, ##__VA_ARGS__);\
-        exit(-1);\
-    } while(0)
+// #define _FATAL(msg, ...) \
+//     do {\
+//         fprintf(stderr, "[%s:%d] "msg"\n", __FILE__, __LINE__, ##__VA_ARGS__);\
+//         exit(-1);\
+//     } while(0)
 
 static PPMImage *readPPM(const char *filename)
 {
@@ -166,7 +166,7 @@ int main(){
     cudaError_t cuda_ret;
 
     // read in 301 frames
-    for(i = 0; i < 301; i++) {
+    for(i = 0; i < 299; i++) {
         sprintf(instr, "infiles/tmp%03d.ppm", i+1);
         images[i] = *readPPM(instr);
     }
@@ -178,10 +178,10 @@ int main(){
 
     // malloc space for input and output on device
     cuda_ret = cudaMalloc((void**)&(imageData_d), image->x*image->y*sizeof(PPMPixel));
-    if(cuda_ret != cudaSuccess) _FATAL("Unable to allocate device memory");
+    if(cuda_ret != cudaSuccess) printf("Unable to allocate device memory pixel = %d\n",sizeof(PPMPixel));
 
     cuda_ret = cudaMalloc((void**)&(outputData_d), image->x*image->y*sizeof(PPMPixel));
-    if(cuda_ret != cudaSuccess) _FATAL("Unable to allocate device memory");
+    if(cuda_ret != cudaSuccess) printf("Unable to allocate device memorypixel = %d\n",sizeof(PPMPixel));
 
     PPMImage *outImage;
     outImage = (PPMImage *)malloc(sizeof(PPMImage));
@@ -193,14 +193,14 @@ int main(){
     cudaDeviceSynchronize();
 
     // for each of the frames run the kernel
-    for(i = 0; i < 301; i++) {
+    for(i = 0; i < 299; i++) {
         sprintf(outstr, "outfiles/tmp%03d.ppm", i+1);
 
         image = &images[i];
 
         cuda_ret = cudaMemcpy(imageData_d, image->data, image->x*image->y*sizeof(PPMPixel), cudaMemcpyHostToDevice);
 		//cuda_ret=!cuda_ret;
-        if(cuda_ret != cudaSuccess) _FATAL("Unable to copy to device");
+        if(cuda_ret != cudaSuccess) printf("Unable to copy to device");
 
 #ifdef CONV
         const unsigned int grid_x = (image->x - 1) / OUTPUT_TILE_SIZE + 1;
@@ -224,10 +224,10 @@ int main(){
 #endif /*BW*/
 
         cuda_ret = cudaDeviceSynchronize();
-        if(cuda_ret != cudaSuccess) _FATAL("Unable to launch/execute kernel");
+        if(cuda_ret != cudaSuccess) printf("Unable to launch/execute kernel");
 
         cuda_ret = cudaMemcpy(outputData_h, outputData_d, image->x*image->y*sizeof(PPMPixel), cudaMemcpyDeviceToHost);
-        if(cuda_ret != cudaSuccess) _FATAL("Unable to copy to host");
+        if(cuda_ret != cudaSuccess) printf("Unable to copy to host");
 
 
         outImage->data = outputData_h;

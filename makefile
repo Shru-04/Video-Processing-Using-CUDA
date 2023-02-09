@@ -1,7 +1,7 @@
 CC=gcc
 LDFLAGS:=-lm
 
-NVCC        = nvcc
+NVCC        = /usr/local/cuda/bin/nvcc
 NVCC_FLAGS  = -O3
 LD_FLAGS    = -lcudart
 
@@ -33,4 +33,4 @@ multiFrame/ppm2DMult: multiFrame/ppm2DMult.o
 	$(NVCC) multiFrame/ppm2DMult.o -o multiFrame/ppm2DMult $(LD_FLAGS)
 
 clean:
-	rm -rf *.o bandw convolution serial-bw serial-convolution ppm_serial outfiles/tmp* *.mp4
+	rm -rf *.o bandw convolution serial-bw serial-convolution ppm_serial outfiles/tmp* infiles/tmp*
