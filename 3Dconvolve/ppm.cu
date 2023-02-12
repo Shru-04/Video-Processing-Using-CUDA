@@ -7,7 +7,7 @@
 
 #define FATAL(msg, ...) \
     do {\
-        fprintf(stderr, "[%s:%d] "msg"\n", __FILE__, __LINE__, ##__VA_ARGS__);\
+        fprintf(stderr, "[%s:%d] \"msg\"\n", __FILE__, __LINE__, ##__VA_ARGS__);\
         exit(-1);\
     } while(0)
 
@@ -132,9 +132,9 @@ Filter3D * initializeFilter()
                                                                {0, 0, 0, 0, 0} },
 
                                                              { {0, 0, 0, 0, 0},
-                                                               {0, 0, 0, 0, 0},
-                                                               {0, 0, 4, 0, 0},
-                                                               {0, 0, 0, 0, 0},
+                                                               {0, 0, -1, 0, 0},
+                                                               {0, -1, 4, -1, 0},
+                                                               {0, 0, -1, 0, 0},
                                                                {0, 0, 0, 0, 0} },
 
                                                              { {0, 0, 0, 0, 0},
@@ -148,6 +148,36 @@ Filter3D * initializeFilter()
                                                                {0, 0, 0, 0, 0},
                                                                {0, 0, 0, 0, 0} }
                                                        };
+    double data_sobel[FILTER_SIZE][FILTER_SIZE][FILTER_SIZE] = {  { {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0} },
+
+                                                                  { {0, 0, 0, 0, 0},
+                                                                    {0, 1, 2, 1, 0},
+                                                                    {0, 2, 4, 2, 0},
+                                                                    {0, 1, 2, 1, 0},
+                                                                    {0, 0, 0, 0, 0} },
+
+                                                                  { {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0} },
+
+                                                                  { {0, 0, 0, 0, 0},
+                                                                    {0, -1, -2, -1, 0},
+                                                                    {0, -2, -4, -2, 0},
+                                                                    {0, -1, -2, -1, 0},
+                                                                    {0, 0, 0, 0, 0} },
+
+                                                                  { {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0},
+                                                                    {0, 0, 0, 0, 0} }
+                                                        };
 
     Filter3D * filter = (Filter3D*) malloc(sizeof(Filter3D));
     // Set filter dimensions
@@ -158,10 +188,11 @@ Filter3D * initializeFilter()
     for (int z = 0; z < FILTER_SIZE; z++)
         for (int y = 0; y < FILTER_SIZE; y++)
             for (int x = 0; x < FILTER_SIZE; x++) {
-                (filter->data)[z][y][x] = data[z][y][x];
+                (filter->data)[z][y][x] = data_sobel[z][y][x];
             }
     // Set filter factor and bias
-    filter->factor = .25;
+    //filter->factor = .25;
+    filter->factor = .5;
     filter->bias =0;
     return filter;
 }
@@ -251,7 +282,7 @@ int main(int argc, char *argv[]){
       infile = argv[1];
       if (!system(NULL)) {exit (EXIT_FAILURE);}
       system("exec rm -r ../infiles/*");
-      sprintf(ffmpegString, "ffmpeg -i ../input_videos/%s -vframes 301 ../infiles/tmp%%03d.ppm", infile);
+      sprintf(ffmpegString, "ffmpeg -i ../input_videos/%s -vframes 301 ../infiles/tmp%%03d.ppm -hide_banner -loglevel error", infile);
       system (ffmpegString);
     }
 
@@ -365,7 +396,7 @@ int main(int argc, char *argv[]){
 
     // Combine frames into a single video with ffmpeg
     if (!system(NULL)) { exit (EXIT_FAILURE);}
-    sprintf(ffmpegString, "ffmpeg -framerate 24 -i ../outfiles/tmp%%03d.ppm -c:v libx264 -r 30 -pix_fmt yuv420p ../outfilter.mp4");
+    sprintf(ffmpegString, "ffmpeg -framerate 24 -i ../outfiles/tmp%%03d.ppm -c:v libx264 -r 30 -pix_fmt yuv420p ../outfilter.mp4 -hide_banner -loglevel error");
     system (ffmpegString);
 
     printf("%f seconds spent\n", time_spent);

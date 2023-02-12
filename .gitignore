@@ -4,3 +4,4 @@ bandw
 bandw.o
 serial-convolution
 serial-bw
+3Dconvolve/ppm_3D_serial.c
