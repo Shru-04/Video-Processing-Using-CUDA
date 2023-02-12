@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <dirent.h>
 #include "ppmKernel.cu"
 #include "ppm.h"
 
@@ -13,7 +14,7 @@
 //      PPMPixel *data;
 // } PPMImage;
 
-#define CREATOR "RPFELGUEIRAS"
+#define CREATOR "RVCE"
 #define RGB_COMPONENT_COLOR 255
 
 #define OUTPUT_TILE_SIZE 12
@@ -147,8 +148,26 @@ Filter * initializeFilter()
     return filter;
 }
 
+int get_num_frames(){
+     int file_count = 0;
+     DIR * dirp;
+     struct dirent * entry;
+
+     dirp = opendir("infiles"); /* There should be error handling after this */
+     if (dirp == NULL)
+          exit(EXIT_FAILURE);
+     while ((entry = readdir(dirp)) != NULL) {
+          if (entry->d_type == DT_REG) { /* If the entry is a regular file */
+               file_count++;
+          }
+     }
+     closedir(dirp);
+     return file_count;
+}
+
 int main(){
 
+    const int frame_count = get_num_frames();
 
     clock_t begin, end;
     double time_spent = 0.0;
@@ -157,7 +176,7 @@ int main(){
     char outstr[80];
     int i = 0;
 
-    PPMImage images[301];
+    PPMImage images[frame_count];
 
     PPMPixel *imageData_d, *outputData_d, *outputData_h;
     // get filter for convolution
@@ -165,8 +184,8 @@ int main(){
 
     cudaError_t cuda_ret;
 
-    // read in 301 frames
-    for(i = 0; i < 299; i++) {
+    // read in frame_count frames
+    for(i = 0; i < frame_count; i++) {
         sprintf(instr, "infiles/tmp%03d.ppm", i+1);
         images[i] = *readPPM(instr);
     }
@@ -193,7 +212,7 @@ int main(){
     cudaDeviceSynchronize();
 
     // for each of the frames run the kernel
-    for(i = 0; i < 299; i++) {
+    for(i = 0; i < frame_count; i++) {
         sprintf(outstr, "outfiles/tmp%03d.ppm", i+1);
 
         image = &images[i];

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <dirent.h>
 
 typedef struct {
      unsigned char red,green,blue;
@@ -29,8 +30,25 @@ typedef struct {
      double bias;
 } Filter_3D;
 
-#define CREATOR "DA BROS"
+#define CREATOR "RVCE"
 #define RGB_COMPONENT_COLOR 255
+
+int get_num_frames(){
+     int file_count = 0;
+     DIR * dirp;
+     struct dirent * entry;
+
+     dirp = opendir("infiles"); /* There should be error handling after this */
+     if (dirp == NULL)
+          exit(EXIT_FAILURE);
+     while ((entry = readdir(dirp)) != NULL) {
+          if (entry->d_type == DT_REG) { /* If the entry is a regular file */
+               file_count++;
+          }
+     }
+     closedir(dirp);
+     return file_count;
+}
 
 void freeImage(PPMImage * image) {
     if(image) {
@@ -220,13 +238,14 @@ void colorPPM(PPMImage *img)
     }
 }
 double processImage(PPMImage * images, Filter f, int stride_len) {
-    double time_spent = -1.0;
+    double time_spent = 0.0;
     clock_t begin, end;
 
     char instr[80];
     char outstr[80];
     int i = 0, j = 0;
-    int numFrames = 301;
+    //int numFrames = 301;
+    int numFrames = get_num_frames();
     int numChunks = numFrames / stride_len;
     if(numFrames % stride_len) numChunks++;
 
@@ -335,7 +354,7 @@ int main(int argc, char *argv[]){
     // Combine frames into a single video with ffmpeg
     if (!system(NULL)) { exit (EXIT_FAILURE);}
     char ffmpegString[200];
-    sprintf(ffmpegString, "ffmpeg -framerate 24 -i outfiles/tmp%%03d.ppm -c:v libx264 -r 30 -pix_fmt yuv420p ./outfilter.mp4");
+    sprintf(ffmpegString, "ffmpeg -framerate 24 -i outfiles/tmp%%03d.ppm -c:v libx264 -r 30 -pix_fmt yuv420p ./outfilter.mp4 -hide_banner -loglevel error");
     system (ffmpegString);
 
 
